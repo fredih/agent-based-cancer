@@ -1,7 +1,14 @@
-from ClassDefinitions import *
+import mesa
+# import *
+from Classes.CancerCell import CancerCell
+from Classes.Vessel import Vessel
+from Classes.utils import *
+from Classes.QuasiCircle import find_quasi_circle
+from Classes.MultipleCanvasGrid import MultipleCanvasGrid
+from Classes.CancerModel import CancerModel
 
 def agent_portrayal(agent):
-    if False or isinstance(agent, TravelPoint):
+    if False or isinstance(agent, Vessel):
         portrayal = {"Shape": "rect",
                  "Filled": "true",
                  "w": 0.8,
@@ -27,35 +34,27 @@ def agent_portrayal(agent):
             portrayal["r"] = 0.2
     return portrayal
 
-def agent_portrayal2(agent):
-    portrayal = {"Shape": "circle",
-                 "Filled": "true",
-                 "r": 0.5}
 
-    if agent.phenotype == "mesenchymal":
-        portrayal["Color"] = "red"
-        portrayal["Layer"] = 0
-    else:
-        portrayal["Color"] = "grey"
-        portrayal["Layer"] = 1
-        portrayal["r"] = 0.2
-    return portrayal
+def main():
+    gridsize     = 201 #PDF: 201
+    width        = gridsize
+    height       = gridsize
+    grids_number = 2
 
-gridsize=50
-width=gridsize
-height=gridsize
+    grids = [MultipleCanvasGrid(agent_portrayal, width, height, 402, 402, site=grid_number) for grid_number in range(grids_number)]
 
-grid = CanvasGridPrimary(agent_portrayal, width, height, 800, 800)
+    chart = mesa.visualization.ChartModule([{"Label": "Total cells", "Color": "Black", 'w': 100}],
+                        canvas_height=50, canvas_width=100,
+                        data_collector_name='datacollector')
 
-grid2 = CanvasGridSecondary(agent_portrayal, width, height, 800, 800)
+    visual_elements = grids + [chart]
 
+    server = mesa.visualization.ModularServer(
+        CancerModel, visual_elements, "Cancer model", {"N": 388, "width": width, "height": height, "grids_number": grids_number}
+    )
 
-chart = mesa.visualization.ChartModule([{"Label": "Total cells",
-                      "Color": "Black"}],
-                    data_collector_name='datacollector')
+    server.port = 8521
+    server.launch()
 
-server = mesa.visualization.ModularServer(
-    CancerModel, [grid, grid2, chart], "Cancer model", {"N": 50, "width": width, "height": height}
-)
-server.port = 8521 # The default
-server.launch()
+if __name__ == "__main__":
+    main()
